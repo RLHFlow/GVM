@@ -1,0 +1,2 @@
+CUDA_VISIBLE_DEVICES=0 python eval.py --model_name_or_path="checkpoints/em-raft/Qwen2.5-Math-1.5B-raft-plusplus-numina_math_em-sample1n8-sample4-iter1/global_step_9/actor/huggingface" \
+    --model_prefix="Qwen2.5-Math-1.5B-raft-plusplus-numina_math_em-sample1n8-sample4-iter1-step9"
