@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     # data_source = 'RLHFlow/numia_prompt_ppo'
     for data_id in range(1, 16):
-        data_source = f'ScaleML-RLHF/numina_math_${data_id}'
+        data_source = f'ScaleML-RLHF/numina_math_{data_id}'
         print(f"Loading the {data_source} dataset from huggingface...", flush=True)
         dataset = datasets.load_dataset(data_source, trust_remote_code=True)
         tokenizer = AutoTokenizer.from_pretrained('Qwen/Qwen2.5-Math-1.5B')
