@@ -13,6 +13,7 @@ from tqdm import tqdm
 import argparse
 import utils
 import sys
+import time
 # sys.path.append('/scratch/jiarui14/EM-CoT/Online-DPO-R1')
 # import reward_labeling
 
@@ -151,7 +152,19 @@ def stage_1_sampling():
     new_outputs = [[output.text for output in outputs[i].outputs] for i in range(len(outputs))]
     return new_outputs
 
+start_time = time.time()
 stage_1_outputs = stage_1_sampling()
+end_time = time.time()
+print(f'Stage 1 sampling time: {end_time - start_time} seconds')
+with open(f'/home/ubuntu/projects/gvm/GVM/em/stage_1_sampling_time.txt', 'a') as f:
+    f.write(f'Model prefix: {script_args.model_prefix}\n')
+    f.write(f'Suffix: {script_args.suffix}\n')
+    f.write(f'Iter: {script_args.iter}\n')
+    f.write(f'Local index: {script_args.local_index}\n')
+    f.write(f'World size: {script_args.world_size}\n')
+    f.write(f'Data size: {len(ds)}\n')
+    f.write(f'Start: {one_num_share * script_args.local_index}\n')
+    f.write(f'{end_time - start_time}\n\n')
 
 #TODO: currently, stage 1 selects all outputs with correct answers
 stage_1_collected_data = []

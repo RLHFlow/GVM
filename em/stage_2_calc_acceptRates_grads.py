@@ -13,6 +13,7 @@ from tqdm import tqdm
 import argparse
 import utils
 import sys
+import time
 # sys.path.append('/scratch/jiarui14/EM-CoT/Online-DPO-R1')
 # import reward_labeling
 
@@ -246,6 +247,7 @@ def calc_grad_ce():
 def calc_grad():
     return calc_grad_logp()
 
+start_time = time.time()
 # calculate accept rates and sample sizes
 accept_rates = calc_accept_rate()
 with open(f'data/{script_args.model_prefix}/{script_args.suffix}/data_{script_args.iter}/accept_rates_{script_args.local_index}.json', 'w') as f:
@@ -254,6 +256,16 @@ with open(f'data/{script_args.model_prefix}/{script_args.suffix}/data_{script_ar
 all_grads = calc_grad()
 with open(f'data/{script_args.model_prefix}/{script_args.suffix}/data_{script_args.iter}/grads_{script_args.local_index}.json', 'w') as f:
     json.dump(all_grads, f, indent=4)
+end_time = time.time()
+print(f'Stage 2 time: {end_time - start_time} seconds')
+with open(f'/home/ubuntu/projects/gvm/GVM/em/stage_2_time.txt', 'a') as f:
+    f.write(f'Model prefix: {script_args.model_prefix}\n')
+    f.write(f'Suffix: {script_args.suffix}\n')
+    f.write(f'Iter: {script_args.iter}\n')
+    f.write(f'Local index: {script_args.local_index}\n')
+    f.write(f'World size: {script_args.num_collect_files}\n')
+    f.write(f'Data size: {len(stage_1_collected_data)}\n')
+    f.write(f'{end_time - start_time}\n\n')
 
 # sample_sizes = calc_sample_ratio(all_grads, accept_rates)
 
