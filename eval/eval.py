@@ -44,10 +44,8 @@ res = {}
 for test_dataset in test_datasets:
     ds = load_dataset('json', data_files=f'data/{test_dataset}.jsonl', split='train')
 
-    if not os.path.exists(f'result/{model_name}/{test_dataset}_outputs.json'):
-        print(f"Skipping generating {test_dataset}")
-        
-        print(f"Testing on {test_dataset}")
+    if not os.path.exists(f'result/{model_name}/{test_dataset}_outputs.json'):        
+        print(f"Generating {test_dataset}")
         
         prompts = []
         for item in ds:
@@ -61,6 +59,7 @@ for test_dataset in test_datasets:
         outputs = llm.generate(prompts, sampling_params)
         new_outputs = [[output.text for output in outputs[i].outputs] for i in range(len(outputs))]
     else:
+        print(f"Skip generating {test_dataset}")
         with open(f'result/{model_name}/{test_dataset}_outputs.json', 'r', encoding='utf-8') as f:
             new_outputs = json.load(f)
         new_outputs = [output['outputs'] for output in new_outputs]
