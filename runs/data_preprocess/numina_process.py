@@ -39,10 +39,10 @@ if __name__ == '__main__':
         # dataset = dataset['train'].train_test_split(test_size=0.1, seed=args.seed)
         train_dataset = dataset['train']
         # test_dataset = dataset['test']
-        args.train_end = min(args.train_end, len(train_dataset))
+        train_end = min(args.train_end, len(train_dataset))
         # args.test_end = min(args.test_end, len(test_dataset))
-        if args.train_end > 0:
-            train_dataset = train_dataset.select(range(args.train_start, args.train_end))
+        if train_end > 0:
+            train_dataset = train_dataset.select(range(args.train_start, train_end))
         # if args.test_end > 0:
         #     test_dataset = test_dataset.shuffle(seed=args.seed).select(range(args.test_start, args.test_end))
 
@@ -133,10 +133,11 @@ if __name__ == '__main__':
     # dataset = dataset['train'].train_test_split(test_size=0.1, seed=args.seed)
     train_dataset = dataset['train']
     # test_dataset = dataset['test']
-    args.train_end = min(args.train_end, len(train_dataset))
+    train_end = min(args.train_end, len(train_dataset))
     # args.test_end = min(args.test_end, len(test_dataset))
-    if args.train_end > 0:
-        train_dataset = train_dataset.select(range(args.train_start, args.train_end))
+    if train_end > 0:
+        print(args.train_start, train_end)
+        train_dataset = train_dataset.select(range(args.train_start, train_end))
     # if args.test_end > 0:
     #     test_dataset = test_dataset.shuffle(seed=args.seed).select(range(args.test_start, args.test_end))
 
