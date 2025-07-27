@@ -1,12 +1,12 @@
 set -x
 
-export VLLM_ATTENTION_BACKEND=XFORMERS
+# export VLLM_ATTENTION_BACKEND=XFORMERS
 
 data=numina_math_15_all
 project_name=em-raft
 algorithm=raft
-model=Qwen2.5-Math-7B
-model_name_or_path=Qwen/Qwen2.5-Math-7B
+model=Llama-3.2-3B-Instruct
+model_name_or_path=meta-llama/Llama-3.2-3B-Instruct
 policy_loss=plusplus # vanilla, plusplus (importance sample + clipping)
 n=8
 experiment_name=${model}-${algorithm}-${policy_loss}-${data}-n${n}
@@ -44,7 +44,7 @@ CUDA_VISIBLE_DEVICES=$(IFS=,; echo "${GPUS[*]}") python3 -m verl.trainer.main_pp
     actor_rollout_ref.actor.policy_loss=$policy_loss \
     actor_rollout_ref.rollout.tensor_model_parallel_size=1 \
     actor_rollout_ref.rollout.name=vllm \
-    actor_rollout_ref.rollout.gpu_memory_utilization=0.8 \
+    actor_rollout_ref.rollout.gpu_memory_utilization=0.7 \
     actor_rollout_ref.rollout.n=$n \
     actor_rollout_ref.rollout.max_num_batched_tokens=8192 \
     actor_rollout_ref.ref.fsdp_config.param_offload=True \
@@ -56,7 +56,7 @@ CUDA_VISIBLE_DEVICES=$(IFS=,; echo "${GPUS[*]}") python3 -m verl.trainer.main_pp
     trainer.n_gpus_per_node=$my_world_size \
     trainer.val_before_train=True \
     trainer.nnodes=1 \
-    trainer.save_freq=1 \
+    trainer.save_freq=5 \
     trainer.default_local_dir=checkpoints/${project_name}/${experiment_name} \
     trainer.test_freq=5 \
     trainer.total_epochs=1 2>&1 | tee -a logs/${project_name}/${experiment_name}_${cur_time}.log

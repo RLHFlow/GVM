@@ -19,7 +19,7 @@ def _default_compute_score(data_source, solution_str, ground_truth, extra_info=N
         from . import gsm8k
 
         res = gsm8k.compute_score(solution_str, ground_truth)
-    elif data_source in ["lighteval/MATH", "DigitalLearningGmbH/MATH-lighteval", "numina_math"]:
+    elif data_source in ["lighteval/MATH", "DigitalLearningGmbH/MATH-lighteval", "numina_math", "HuggingFaceH4/MATH-500"]:
         from . import math_verify
 
         res = math_verify.compute_score(solution_str, ground_truth)
