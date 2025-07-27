@@ -42,23 +42,30 @@ test_datasets = args.data.split(',')
 res = {}
 
 for test_dataset in test_datasets:
-    if os.path.exists(f'result/{model_name}/{test_dataset}_outputs.json'):
-        print(f"Skipping {test_dataset}")
-        continue
-    this_res = {}
-    print(f"Testing on {test_dataset}")
     ds = load_dataset('json', data_files=f'data/{test_dataset}.jsonl', split='train')
-    prompts = []
-    for item in ds:
-        conv = [
-            {'role': 'system', 'content': system_prompt},
-            {'role': 'user', 'content': item['problem'] + f' {inst}'}
-        ]
-        conv_chat = tokenizer.apply_chat_template(conv, tokenize=False, add_generation_prompt=True)
-        prompts.append(conv_chat)
 
-    outputs = llm.generate(prompts, sampling_params)
-    new_outputs = [[output.text for output in outputs[i].outputs] for i in range(len(outputs))]
+    if not os.path.exists(f'result/{model_name}/{test_dataset}_outputs.json'):
+        print(f"Skipping generating {test_dataset}")
+        
+        print(f"Testing on {test_dataset}")
+        
+        prompts = []
+        for item in ds:
+            conv = [
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': item['problem'] + f' {inst}'}
+            ]
+            conv_chat = tokenizer.apply_chat_template(conv, tokenize=False, add_generation_prompt=True)
+            prompts.append(conv_chat)
+
+        outputs = llm.generate(prompts, sampling_params)
+        new_outputs = [[output.text for output in outputs[i].outputs] for i in range(len(outputs))]
+    else:
+        with open(f'result/{model_name}/{test_dataset}_outputs.json', 'r', encoding='utf-8') as f:
+            new_outputs = json.load(f)
+        new_outputs = [output['outputs'] for output in new_outputs]
+
+    this_res = {}
     scores = []
     preds = []
     for i, item in enumerate(tqdm(ds, desc='Scoring')):
