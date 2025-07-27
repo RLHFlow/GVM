@@ -30,18 +30,18 @@ def extract_solution(solution_str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--local_dir", default="data/math")
+    parser.add_argument("--local_dir", default="data/math500")
     parser.add_argument("--hdfs_dir", default=None)
 
     args = parser.parse_args()
 
     # 'lighteval/MATH' is no longer available on huggingface.
     # Use mirror repo: DigitalLearningGmbH/MATH-lighteval
-    data_source = "DigitalLearningGmbH/MATH-lighteval"
+    data_source = "HuggingFaceH4/MATH-500"
     print(f"Loading the {data_source} dataset from huggingface...", flush=True)
     dataset = datasets.load_dataset(data_source, trust_remote_code=True)
 
-    train_dataset = dataset["train"]
+    # train_dataset = dataset["train"]
     test_dataset = dataset["test"]
 
     instruction_following = "Let's think step by step and output the final answer within \\boxed{}."
@@ -53,26 +53,25 @@ if __name__ == "__main__":
 
             question = question + " " + instruction_following
 
-            answer = example.pop("solution")
-            solution = extract_solution(answer)
+            answer = example.pop("answer")
             data = {
                 "data_source": data_source,
                 "prompt": [{"role": "user", "content": question}],
                 "ability": "math",
-                "reward_model": {"style": "rule", "ground_truth": solution},
+                "reward_model": {"style": "rule", "ground_truth": answer},
                 "extra_info": {"split": split, "index": idx},
             }
             return data
 
         return process_fn
 
-    train_dataset = train_dataset.map(function=make_map_fn("train"), with_indices=True)
+    # train_dataset = train_dataset.map(function=make_map_fn("train"), with_indices=True)
     test_dataset = test_dataset.map(function=make_map_fn("test"), with_indices=True)
 
     local_dir = args.local_dir
     hdfs_dir = args.hdfs_dir
 
-    train_dataset.to_parquet(os.path.join(local_dir, "train.parquet"))
+    # train_dataset.to_parquet(os.path.join(local_dir, "train.parquet"))
     test_dataset.to_parquet(os.path.join(local_dir, "test.parquet"))
 
     if hdfs_dir is not None:
