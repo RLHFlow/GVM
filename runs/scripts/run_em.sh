@@ -5,7 +5,7 @@ export VLLM_ATTENTION_BACKEND=XFORMERS
 data=numina_math_em
 project_name=em-raft
 algorithm=raft
-model=Qwen2.5-Math-7B
+model=Llama-3.2-3B-Instruct
 policy_loss=plusplus # vanilla, plusplus (importance sample + clipping)
 stage_1_samples_per_prompt=8
 stage_2_samples_per_prompt=8
@@ -16,30 +16,30 @@ beta=2.0
 rollout_n=1
 data_shuffle=True
 
-for i in {1..15}; do
+for i in {1..10}; do
     if [ $i -eq 1 ]; then
-        model_name_or_path=Qwen/Qwen2.5-Math-7B
+        model_name_or_path=meta-llama/Llama-3.2-3B-Instruct
     else
         model_name_or_path=checkpoints/em-raft/${model}-${algorithm}-${policy_loss}-${data}-n${stage_1_samples_per_prompt}-${stage_2_samples_per_prompt}-iter$((i-1))/global_step_9/actor/huggingface 
-    fi    
+    fi
 
     if [ $i -ne 0 ]; then
         cd em/
-        bash run_em.sh $model_name_or_path $i $stage_1_samples_per_prompt $stage_2_samples_per_prompt $model $filter_threshold $filter_insufficient "numina_math_${i}_n${stage_1_samples_per_prompt}_${stage_2_samples_per_prompt}_filter${filter_threshold}_insufficient${filter_insufficient}" $alpha $beta
+        bash run_em.sh "../$model_name_or_path" $i $stage_1_samples_per_prompt $stage_2_samples_per_prompt $model $filter_threshold $filter_insufficient "numina_math_${i}_n${stage_1_samples_per_prompt}_${stage_2_samples_per_prompt}_filter${filter_threshold}_insufficient${filter_insufficient}" $alpha $beta
         wait
         cd ..
     fi
     
     iter=$i
     experiment_name=${model}-${algorithm}-${policy_loss}-${data}-n${stage_1_samples_per_prompt}-${stage_2_samples_per_prompt}-iter${iter}
-    GPUS=(0 1 2 3)
+    GPUS=(0 1 2 3 4 5 6 7)
     my_world_size=${#GPUS[@]}
     total_epochs=1
 
     if [ $i -eq 0 ]; then
-        sample_sizes_data="em/data/Qwen2.5-Math-1.5B/numina_math_1_n8_8_filter1.0_insufficient0.0/data_1/sample_sizes_sample8_a0.001_b2.0.json"
+        sample_sizes_data="em/data/Llama-3.2-3B-Instruct/numina_math_1_n8_8_filter1.0_insufficient0.0/data_1/sample_sizes_sample8_a0.001_b2.0.json"
     else
-        sample_sizes_data="em/data/${model}/numina_math_${iter}_n${stage_1_samples_per_prompt}_${stage_2_samples_per_prompt}_filter${filter_threshold}_insufficient${filter_insufficient}/data_${iter}/sample_sizes_sample${stage_2_samples_per_prompt}.json"
+        sample_sizes_data="em/data/${model}/numina_math_${iter}_n${stage_1_samples_per_prompt}_${stage_2_samples_per_prompt}_filter${filter_threshold}_insufficient${filter_insufficient}/data_${iter}/sample_sizes_sample${stage_2_samples_per_prompt}_a${alpha}_b${beta}.json"
     fi
 
     math_train_path=./data/numina_math_${iter}/train.parquet
@@ -77,7 +77,7 @@ for i in {1..15}; do
         actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=64 \
         actor_rollout_ref.rollout.name=vllm \
         +actor_rollout_ref.rollout.use_em=True \
-        actor_rollout_ref.rollout.gpu_memory_utilization=0.5 \
+        actor_rollout_ref.rollout.gpu_memory_utilization=0.7 \
         actor_rollout_ref.rollout.n=$rollout_n \
         +actor_rollout_ref.rollout.sample_sizes_data="$sample_sizes_data" \
         actor_rollout_ref.rollout.max_num_batched_tokens=8192 \
@@ -91,10 +91,10 @@ for i in {1..15}; do
         trainer.n_gpus_per_node=$my_world_size \
         trainer.nnodes=1 \
         trainer.val_before_train=True \
-        trainer.save_freq=10 \
+        trainer.save_freq=5 \
         trainer.default_local_dir=checkpoints/${project_name}/${experiment_name} \
         trainer.test_freq=5 \
         trainer.total_epochs=$total_epochs 2>&1 | tee logs/${project_name}/${experiment_name}.log
 
-    python scripts/model_merger.py --local_dir=checkpoints/${project_name}/${experiment_name}/global_step_9/actor
+    python scripts/legacy_model_merger.py merge --backend=fsdp --hf_model_path=meta-llama/Llama-3.2-3B-Instruct --local_dir=checkpoints/${project_name}/${experiment_name}/global_step_9/actor --target_dir=checkpoints/${project_name}/${experiment_name}/global_step_9/actor/huggingface
 done
