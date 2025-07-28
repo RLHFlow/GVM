@@ -6,6 +6,7 @@ from datasets import load_dataset, Dataset
 import functools
 import json
 import sys
+from math_verify.errors import TimeoutException
 # sys.path.append('/scratch/jiarui14/EM-CoT/Online-DPO-R1')
 # import reward_labeling
 
@@ -348,13 +349,15 @@ def compute_score_math_verify(model_output: str, ground_truth: str) -> bool:
         gold_extraction_target=(LatexExtractionConfig(),),
         pred_extraction_target=(ExprExtractionConfig(), LatexExtractionConfig()),
     )
-    ret_score = 0.
+    ret_score = 0.0
 
     # Wrap the ground truth in \boxed{} format for verification
     ground_truth_boxed = "\\boxed{" + ground_truth + "}"
     try:
         ret_score, _ = verify_func([ground_truth_boxed], [model_output])
-    except Exception as e:
-        print(e)
+    except Exception:
+        pass
+    except TimeoutException:
+        ret_score = 0.0
 
     return ret_score
