@@ -40,7 +40,6 @@ fastapi-cli==0.0.8
 fastapi-cloud-cli==0.1.4
 fastrlock==0.8.3
 filelock==3.18.0
-flash-attn==2.7.4.post1
 frozenlist==1.7.0
 fsspec==2025.3.0
 gguf==0.10.0

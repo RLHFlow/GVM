@@ -51,6 +51,7 @@ Chain-of-thought (CoT) reasoning in large language models (LLMs) can be formaliz
    git clone https://github.com/RLHFlow/GVM.git
    cd GVM/
    python -m uv pip install -r requirements.txt
+   python -m uv pip install flash-attn==2.7.4.post1 --no-build-isolation
    ```
 
 ## Experiments Running
