@@ -5,7 +5,7 @@
 </div>
 
 ## Table of Contents
-- [GVM - Gradient Variance Minimization](#gvm---dynamic-inference-budget-scheduling)
+- [DIBS - Dynamic Inference Budget Scheduling](#dibs---dynamic-inference-budget-scheduling)
   - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
   - [Environment Setup](#environment-setup)
@@ -48,12 +48,9 @@ Chain-of-thought (CoT) reasoning in large language models (LLMs) can be formaliz
    ```bash
    pip install pip --upgrade
    pip install uv
-   python -m uv pip install torch==2.4.0 --index-url https://download.pytorch.org/whl/cu124
-   python -m uv pip install flash-attn --no-build-isolation
    git clone https://github.com/RLHFlow/GVM.git
    cd GVM/
-   python -m uv pip install -e .
-   python -m uv pip install vllm==0.6.3
+   python -m uv pip install -r requirements.txt
    ```
 
 ## Experiments Running
