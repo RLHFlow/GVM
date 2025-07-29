@@ -1,11 +1,11 @@
 set -x
 
-export VLLM_ATTENTION_BACKEND=XFORMERS
+# export VLLM_ATTENTION_BACKEND=XFORMERS
 
 data=numina_math_em
 project_name=em-raft
-algorithm=raft
-model=Llama-3.2-3B-Instruct
+algorithm=grpo
+model=Llama-3.2-1B-Instruct
 policy_loss=plusplus # vanilla, plusplus (importance sample + clipping)
 stage_1_samples_per_prompt=8
 stage_2_samples_per_prompt=8
@@ -15,23 +15,28 @@ alpha=0.001
 beta=2.0
 rollout_n=1
 data_shuffle=True
+clip_higher_ratio=0.3
 
 for i in {1..10}; do
     if [ $i -eq 1 ]; then
-        model_name_or_path=meta-llama/Llama-3.2-3B-Instruct
+        model_name_or_path=meta-llama/Llama-3.2-1B-Instruct
     else
-        model_name_or_path=checkpoints/em-raft/${model}-${algorithm}-${policy_loss}-${data}-n${stage_1_samples_per_prompt}-${stage_2_samples_per_prompt}-iter$((i-1))/global_step_9/actor/huggingface 
+        model_name_or_path=checkpoints/em-raft/${model}-${algorithm}-${policy_loss}-${data}-n${stage_1_samples_per_prompt}-${stage_2_samples_per_prompt}-clipH${clip_higher_ratio}-iter$((i-1))/global_step_9/actor/huggingface 
     fi
 
     if [ $i -ne 0 ]; then
         cd em/
-        bash run_em.sh "../$model_name_or_path" $i $stage_1_samples_per_prompt $stage_2_samples_per_prompt $model $filter_threshold $filter_insufficient "numina_math_${i}_n${stage_1_samples_per_prompt}_${stage_2_samples_per_prompt}_filter${filter_threshold}_insufficient${filter_insufficient}" $alpha $beta
+        em_model_name_or_path=$model_name_or_path
+        if [ $i -ne 1 ]; then
+            em_model_name_or_path="../$em_model_name_or_path"
+        fi
+        bash run_em.sh $em_model_name_or_path $i $stage_1_samples_per_prompt $stage_2_samples_per_prompt $model $filter_threshold $filter_insufficient "numina_math_${i}_n${stage_1_samples_per_prompt}_${stage_2_samples_per_prompt}_filter${filter_threshold}_insufficient${filter_insufficient}" $alpha $beta
         wait
         cd ..
     fi
     
     iter=$i
-    experiment_name=${model}-${algorithm}-${policy_loss}-${data}-n${stage_1_samples_per_prompt}-${stage_2_samples_per_prompt}-iter${iter}
+    experiment_name=${model}-${algorithm}-${policy_loss}-${data}-n${stage_1_samples_per_prompt}-${stage_2_samples_per_prompt}-clipH${clip_higher_ratio}-iter${iter}
     GPUS=(0 1 2 3 4 5 6 7)
     my_world_size=${#GPUS[@]}
     total_epochs=1
@@ -96,5 +101,5 @@ for i in {1..10}; do
         trainer.test_freq=5 \
         trainer.total_epochs=$total_epochs 2>&1 | tee logs/${project_name}/${experiment_name}.log
 
-    python scripts/legacy_model_merger.py merge --backend=fsdp --hf_model_path=meta-llama/Llama-3.2-3B-Instruct --local_dir=checkpoints/${project_name}/${experiment_name}/global_step_9/actor --target_dir=checkpoints/${project_name}/${experiment_name}/global_step_9/actor/huggingface
+    python scripts/legacy_model_merger.py merge --backend=fsdp --hf_model_path=meta-llama/$model --local_dir=checkpoints/${project_name}/${experiment_name}/global_step_9/actor --target_dir=checkpoints/${project_name}/${experiment_name}/global_step_9/actor/huggingface
 done
