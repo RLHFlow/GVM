@@ -4,6 +4,9 @@ eval/result
 # data
 ./data/
 
+# backup
+*.bk.*
+
 **/*.pt
 **/checkpoints
 **/wget-log
